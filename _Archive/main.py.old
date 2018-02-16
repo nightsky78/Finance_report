@@ -1,0 +1,35 @@
+from filehandling import file
+import time
+
+location = r'C:\Users\Johannes\OneDrive\Johannes files\Python\FSND-Virtual-Machine\vagrant\Finance'
+
+# Konto
+#myfile = file.File("15908965.csv",r"C:\Users\q204249\Desktop\Python\Finance")
+
+#Kreditkarte
+myfile = file.File("4748________0796_short.csv", location)
+
+mycontent = myfile.get_cleaned_content()
+#        for line in mycontent:
+#            print(line)
+
+#Konto
+#excl_column = [0,2,5,6,8,9,10,11]
+#ger_to_us_col = [7]
+#exclusions = ["test"]
+#cleancontent = myfile.get_structured_content(mycontent, ";", 12, excl_column, exclusions, ger_to_us_col)
+
+#Kreditkarte
+excl_column = [0,2,5,6]
+ger_to_us_col = [4]
+exclusions = ["test"]
+cleancontent = myfile.get_structured_content(mycontent, ";", 7, excl_column,exclusions, ger_to_us_col)
+
+hashedcontent = myfile.add_hash(cleancontent)
+
+for line in hashedcontent:
+    print(line)
+	
+#time.sleep(5)	
+#input('Press Enter to continue')
+
