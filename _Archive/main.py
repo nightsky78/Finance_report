@@ -1,12 +1,10 @@
-import sys
 from db_handling import db
 
 # sys.path.append("/vagrant/Finance/filehandling")
 
-from filehandling import file
+from _Archive import file
 
 # import file
-import time
 
 #location = r'/vagrant/Finance'
 location = r'C:\Users\Johannes\OneDrive\Johannes files\Python\FSND-Virtual-Machine\vagrant\Finance'

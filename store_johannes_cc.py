@@ -1,11 +1,12 @@
-import store_transactions
+import store_transactions_pandas
 
-
-location = r'/Users/johanneshettig/OneDrive/Johannes files/Python/Finance_project'
-sourcefile = "4748________0796.csv"
+#location where the file is on the file system
+location = r'/Users/johanneshettig/OneDrive/Johannes files/Python/Finance_project/'
+# Name of sourcefile on the file system
+sourcefile = "4748________0796_2.csv"
+# Type of the sourcefile
 source = 'dkbkredit'
+# user ID
 user_id = 1
-exclusions = "Wertstellung"
 
-
-store_transactions.processtransfile(location,sourcefile,source,exclusions,user_id)
+store_transactions_pandas.processtransfile(location,sourcefile,source,user_id)

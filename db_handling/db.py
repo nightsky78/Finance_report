@@ -105,7 +105,7 @@ class Db_handler_user:
         cur = con.cursor()
 
         cur.execute("SELECT name, delimiter, length, date_column,\
-                            subject_column, amount_column, source_id FROM sourcefile WHERE name='{0}' \
+                            subject_column, amount_column, source_id, skiprow FROM sourcefile WHERE name='{0}' \
                             and user_ID={1};".format(self.name,self.user_ID))
         return cur.fetchall()
 
@@ -189,14 +189,37 @@ class Db_handler_user:
         con.commit()
         
         con.close()
-        
-             
 
+    def store_finance_data_pandas(self, content, source):
+        self.content = content
+        self.source = source
 
+        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host,
+                               port=self.port)
+        cur = con.cursor()
 
+        cur.execute("SELECT source_id, length, date_column, subject_column, amount_column FROM "
+                    "sourcefile WHERE name = '{0}' AND user_id = '{1}';".format(self.source, self.user_ID))
+        source_data = cur.fetchall()[0]
+        print(source_data)
+        i = 0
+        while i < len(content):
 
+            data_val = content.ix[i,source_data[2]]
+            subject_val = content.ix[i,source_data[3]]
+            amount_val = content.ix[i,source_data[4]]
+            hash_val = content.ix[i,source_data[1]]
+            cat_val = content.ix[i,source_data[1]+1]
+#            print(cat_val)
+            cur.execute("SELECT cat_id FROM categories WHERE category = '{0}';".format(cat_val))
+            category_id = cur.fetchall()[0]
+#            print(category_id)
 
+            query = "INSERT INTO transactions (hash, date, subject, amount, category_id, user_id, source_id) VALUES (%s, to_date(%s, 'DD.MM.YYY'), %s, %s, %s, %s, %s);"
+            data = (hash_val, data_val, subject_val, amount_val, category_id, self.user_ID, source_data[0])
+            cur.execute(query, data)
+            i = i + 1
 
+        con.commit()
 
-
-             
+        con.close()

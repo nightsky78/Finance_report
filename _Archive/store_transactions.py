@@ -1,9 +1,8 @@
-import sys
 from db_handling import db
-from filehandling import file
+from _Archive import file
 
 
-def processtransfile(location,sourcefile,source,exclusions,user_id):
+def processtransfile(location,sourcefile,source,user_id):
 
     myfile = file.File(sourcefile, location)
 
