@@ -55,19 +55,19 @@ class Db_handler_user:
     def retrieve_matching_values(self, source_ID):
         self.source_ID = source_ID
 
-        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+        con = psycopg2.connect(dbname=self.dbname, user=self.user,
+                               password=self.password, host=self.host, port=self.port)
         cur = con.cursor()
 
-        query =  "SELECT pattern, pattern_location FROM matching WHERE source_id=%s AND user_id=%s;"
-        data = (self.source_ID, self.user_ID)
-
-        cur.execute(query, data)
+        cur.execute("SELECT name, pattern, pattern_loc_id, category_id, source_id FROM matchval \
+                    WHERE source_id={0} AND user_id={1};".format(self.source_ID,self.user_ID))
  
         return cur.fetchall()
 
     def retrieve_all_matching_values(self):
 
-        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+        con = psycopg2.connect(dbname=self.dbname, user=self.user,
+                               password=self.password, host=self.host, port=self.port)
         cur = con.cursor()
 
         cur.execute("SELECT name, pattern, pattern_loc_id, category_id, source_id FROM matchval WHERE user_id={0};".format(self.user_ID))
@@ -107,6 +107,7 @@ class Db_handler_user:
         cur.execute("SELECT name, delimiter, length, date_column,\
                             subject_column, amount_column, source_id, skiprow FROM sourcefile WHERE name='{0}' \
                             and user_ID={1};".format(self.name,self.user_ID))
+#        print(cur.fetchall())
         return cur.fetchall()
 
     def update_transaction_category(self, category_id, pattern, pattern_loc, source_id):
@@ -115,10 +116,10 @@ class Db_handler_user:
         self.source_id = source_id
         self.pattern_loc = pattern_loc
 
-        print(self.category_id)
-        print(self.pattern)
-        print(self.source_id)
-        print(self.pattern_loc)
+ #       print(self.category_id)
+ #       print(self.pattern)
+ #       print(self.source_id)
+ #       print(self.pattern_loc)
         
         con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
         cur = con.cursor()
