@@ -1,17 +1,31 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+import configparser
+import pandas
+import datetime
 
 class Db_handler_user:
-    def __init__(self, dbname, user, password, host, port, user_ID):
-        self.dbname = dbname
-        self.user = user
-        self.password = password
-        self.host = host
-        self.port = port
+    def __init__(self, user_ID):
+
+        # Parse the config file
+        dbconfig = configparser.ConfigParser()
+        configfilepath = r'../FinanceDB.config'
+        dbconfig.read(configfilepath)
+
+        self.dbname = dbconfig.get('dbconfig','db_name')
+        self.user = dbconfig.get('dbconfig', 'user')
+        self.password = dbconfig.get('dbconfig', 'password')
+        self.host = dbconfig.get('dbconfig', 'db_url')
+        self.port = dbconfig.get('dbconfig','db_port')
         self.user_ID = user_ID
 
+        self.conn = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host,
+                               port=self.port)
+
+
     def testDBconnection(self):
-        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host,
+                               port=self.port)
         cur = con.cursor()
         
         cur.execute('select * from test')
@@ -33,6 +47,17 @@ class Db_handler_user:
         cur.execute('DROP DATABASE ' + self.dbname)
 #        print(cur.fetchall())
 
+    def select_from_db(self, table, column, condition):
+        self.table = table
+        self.column = column
+        self.condition = condition
+
+        cur = self.conn.cursor()
+
+        cur.execute('select {0} from {1} where {2}'.format(self.column, self.table, self.condition))
+
+        return cur.fetchall()
+
     def store_matching_values(self, name, source_id, pattern, pattern_loc_id, category_id):
 
         self.name = name
@@ -41,10 +66,12 @@ class Db_handler_user:
         self.pattern_loc_id = pattern_loc_id
         self.category_id = category_id
         
-        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password,
+                               host=self.host, port=self.port)
         cur = con.cursor()
 
-        query =  "INSERT INTO matchval (name, source_id, pattern, pattern_loc_id, category_id, user_id) VALUES (%s, %s, %s, %s, %s, %s);"
+        query =  "INSERT INTO matchval (name, source_id, pattern, pattern_loc_id, category_id, \
+                        user_id) VALUES (%s, %s, %s, %s, %s, %s);"
         data = (self.name, self.source_id, self.pattern, self.pattern_loc_id, self.category_id, self.user_ID )
 
         cur.execute(query, data)
@@ -70,7 +97,8 @@ class Db_handler_user:
                                password=self.password, host=self.host, port=self.port)
         cur = con.cursor()
 
-        cur.execute("SELECT name, pattern, pattern_loc_id, category_id, source_id FROM matchval WHERE user_id={0};".format(self.user_ID))
+        cur.execute("SELECT name, pattern, pattern_loc_id, category_id, source_id FROM matchval \
+                            WHERE user_id={0};".format(self.user_ID))
 
         return cur.fetchall()
 
@@ -86,11 +114,14 @@ class Db_handler_user:
 
         
         
-        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host,
+                               port=self.port)
         cur = con.cursor()
 
-        query =  "INSERT INTO source (name, description, delimiter, length, date_column, subject_column, amount_column, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
-        data = (self.name, self.description, self.delimiter, self.length, self.date_column, subject_column, amount_column, self.user_ID )
+        query =  "INSERT INTO source (name, description, delimiter, length, date_column, subject_column, \
+                                amount_column, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
+        data = (self.name, self.description, self.delimiter, self.length, self.date_column, subject_column,
+                                    amount_column, self.user_ID )
 
         cur.execute(query, data)
 
@@ -101,11 +132,12 @@ class Db_handler_user:
     def retrieve_source_values(self, name):
         self.name = name
 
-        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host,
+                               port=self.port)
         cur = con.cursor()
 
         cur.execute("SELECT name, delimiter, length, date_column,\
-                            subject_column, amount_column, source_id, skiprow FROM sourcefile WHERE name='{0}' \
+                            subject_column, amount_column, source_id, skiprow, subject_column_2 FROM sourcefile WHERE name='{0}' \
                             and user_ID={1};".format(self.name,self.user_ID))
 #        print(cur.fetchall())
         return cur.fetchall()
@@ -121,12 +153,15 @@ class Db_handler_user:
  #       print(self.source_id)
  #       print(self.pattern_loc)
         
-        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host,
+                               port=self.port)
         cur = con.cursor()
         print("update transactions set category_id = {0} where {1} like '%{2}%' \
-                and source_id = {3} and user_id = {4}".format(self.category_id, self.pattern_loc, self.pattern, self.source_id, self.user_ID))
+                and source_id = {3} and user_id = {4}".format(self.category_id, self.pattern_loc, self.pattern,
+                                                              self.source_id, self.user_ID))
         cur.execute("update transactions set category_id = {0} where {1} like '%{2}%' \
-                and source_id = {3} and user_id = {4}".format(self.category_id, self.pattern_loc, self.pattern, self.source_id, self.user_ID))
+                and source_id = {3} and user_id = {4}".format(self.category_id, self.pattern_loc, self.pattern,
+                                                              self.source_id, self.user_ID))
         
         con.commit()
         
@@ -135,9 +170,9 @@ class Db_handler_user:
     def store_category(self, category, description):
         self.category = category
         self.description = description
-      
-        
-        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+
+        con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password,
+                               host=self.host, port=self.port)
         cur = con.cursor()
 
         query =  "INSERT INTO categories (category, description, user_id) VALUES (%s, %s, %s);"
@@ -148,7 +183,6 @@ class Db_handler_user:
         con.commit()
         
         con.close()
-
 
     def retrieve_category(self, name):
         self.name = name
@@ -182,8 +216,8 @@ class Db_handler_user:
             cur.execute("SELECT cat_id FROM categories WHERE category = '{0}';".format(splitline[4]))
             category_id = cur.fetchall()[0]
 
-
-            query =  "INSERT INTO transactions (hash, date, subject, amount, category_id, user_id, source_id) VALUES (%s, to_date(%s, 'DD.MM.YYY'), %s, %s, %s, %s, %s);"
+            query = "INSERT INTO transactions (hash, date, subject, amount, category_id, user_id, source_id)\
+                            VALUES (%s, to_date(%s, 'DD.MM.YYY'), %s, %s, %s, %s, %s);"
             data = (splitline[0], splitline[1], splitline[2], splitline[3], category_id, self.user_ID, source_id)
             cur.execute(query, data)
 
@@ -197,13 +231,15 @@ class Db_handler_user:
 
         con = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host,
                                port=self.port)
-        cur = con.cursor()
+        cur = self.conn.cursor()
 
         cur.execute("SELECT source_id, length, date_column, subject_column, amount_column FROM "
                     "sourcefile WHERE name = '{0}' AND user_id = '{1}';".format(self.source, self.user_ID))
         source_data = cur.fetchall()[0]
-        print(source_data)
+#        print(source_data)
         i = 0
+#        print(content[source_data[2]])
+
         while i < len(content):
 
             data_val = content.ix[i,source_data[2]]
@@ -213,14 +249,17 @@ class Db_handler_user:
             cat_val = content.ix[i,source_data[1]+1]
 #            print(cat_val)
             cur.execute("SELECT cat_id FROM categories WHERE category = '{0}';".format(cat_val))
-            category_id = cur.fetchall()[0]
+            category_id = cur.fetchall()[0][0]
 #            print(category_id)
 
-            query = "INSERT INTO transactions (hash, date, subject, amount, category_id, user_id, source_id) VALUES (%s, to_date(%s, 'DD.MM.YYY'), %s, %s, %s, %s, %s);"
+            print ('Adding line to DB: {0} - {1} - {2} - {3} - {4} - {5} - {6}'.format(hash_val, data_val, subject_val, amount_val,
+                                                                    category_id, self.user_ID, source_data[0]))
+            query = "INSERT INTO transactions (hash, date, subject, amount, category_id, user_id, source_id) \
+                    VALUES (%s, to_date(%s, 'DD.MM.YYY'), %s, %s, %s, %s, %s);"
             data = (hash_val, data_val, subject_val, amount_val, category_id, self.user_ID, source_data[0])
             cur.execute(query, data)
             i = i + 1
 
-        con.commit()
+        self.conn.commit()
 
-        con.close()
+        self.conn.close()

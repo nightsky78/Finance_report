@@ -7,17 +7,25 @@ class ReadCsvPandas:
         self.filename = arg1
         self.filelocation = arg2
 
-
-    def get_pandas_content(self,skiplines,excl_columns,delimiter):
+    def get_pandas_content(self,skiplines,excl_columns,delimiter, add_column, subject_column):
             self.skiplines = skiplines
             self.excl_columns = excl_columns
             self.delimiter = delimiter
+            self.add_column = add_column
+            self.subject_column = subject_column
 
             fileloc=self.filelocation+self.filename
-            print(fileloc)
+
             content = pandas.read_csv(fileloc, encoding = "ISO-8859-1",header=None, sep=self.delimiter,
                                       skiprows=range(0,self.skiplines))
+            if add_column:
+                print('Merging columns requested')
+                content[subject_column] = content[add_column] + " - " + content[subject_column]
+
             content = content.drop(content.columns[self.excl_columns], axis=1)
+
+
+
 
             return content
 
